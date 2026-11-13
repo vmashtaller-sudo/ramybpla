@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рамы и защитные конструкции БПЛА</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Отступы: сверху 40px, снизу 100px (чтобы кнопки не перекрывали текст), по бокам 60px */
+            padding: 40px 60px 100px 60px; 
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        h1 {
+            color: #ff7b00;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            color: #e0e0e0;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+        }
+
+        p, li {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* Галерея картинок */
+        .image-gallery {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .image-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 45%;
+        }
+
+        .image-gallery img {
+            max-height: 350px;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            background-color: #fff;
+            padding: 5px;
+        }
+
+        .caption {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* --- СТИЛИ ДЛЯ ТЕСТА --- */
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .question-block {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ff9f43;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .option-label:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .option-label input[type="radio"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .correct-answer {
+            background-color: rgba(40, 167, 69, 0.4) !important;
+            border: 1px solid #28a745;
+        }
+
+        .wrong-answer {
+            background-color: rgba(220, 53, 69, 0.4) !important;
+            border: 1px solid #dc3545;
+        }
+
+        .quiz-btn {
+            background-color: #28a745;
+            font-size: 1.1rem;
+            padding: 12px 30px;
+            margin-top: 10px;
+            width: 100%;
+            border: none;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .quiz-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        #quiz-result {
+            margin-top: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+
+        /* Кнопки управления */
+        .controls {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 8px 20px;
+            border-radius: 30px;
+            z-index: 10;
+        }
+
+        button.nav-btn {
+            background-color: #ff7b00;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.95rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s, opacity 0.3s;
+        }
+
+        button.nav-btn:hover:not(:disabled) {
+            background-color: #e66a00;
+        }
+
+        button.nav-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        #slideCounter {
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* Полоса прокрутки */
+        .slide::-webkit-scrollbar { width: 8px; }
+        .slide::-webkit-scrollbar-track { background: #1a1a2e; }
+        .slide::-webkit-scrollbar-thumb { background: #ff7b00; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+
+        <!-- Слайд 1 -->
+        <div class="slide active">
+            <div class="content">
+                <h1>Рамы и защитные конструкции</h1>
+                <p><b>Рама</b> — это одновременно несущий и системообразующий элемент мультикоптера. Конструкция рамы и расположение элементов определяют назначение будущего беспилотника, условия эксплуатации, технические характеристики, возможности и слабые места устройства.</p>
+                <p>Когда к БПЛА предъявляют высокие требования надежности и безопасности (при полетах в помещении, обследовании шахт и трубопроводов, полетов рядом с человеком) требуется <b>защита</b> — конструкция, которая предотвращает повреждения БПЛА от столкновения с препятствиями и делает его более безопасным для окружающих.</p>
+            </div>
+        </div>
+
+        <!-- Слайд 2 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Устройство рамы квадрокоптера</h1>
+                <p>Рассмотрим раму для конструкции «квадрокоптер» - самой распространенной в настоящее время. Прочие мультикоптеры строятся и функционируют по похожему принципу.</p>
+                <p>Рама состоит из двух частей: <b>фюзеляжа (корпуса)</b> и <b>лучей</b>.</p>
+                <ul>
+                    <li>В фюзеляже размещается электронная начинка: полетный контроллер, плата распределения питания, аккумулятор. Антенны стараются выносить на лучи.</li>
+                    <li>Камера и полезные нагрузки в небольших моделях размещаются в корпусе, в серьезных — выносятся на стабилизированном подвесе.</li>
+                    <li>В лучах обычно размещают моторы и регуляторы скорости.</li>
+                    <li>Лучи должны быть прочными, жесткими, устойчивыми к ударам и минимизировать вибрации.</li>
+                </ul>
+                <div class="image-gallery single">
+                    <div class="image-block">
+                        <img src="img/1.jpg" alt="Схема рамы">
+                        <div class="caption">Схема расположения фюзеляжа и лучей</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 3 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Форма рамы: Тип «Х» и Удлиненный «Х»</h1>
+                <p>Расположение лучей и способ их крепления во многом определяет форму рамы. Самые популярные: Х, H, гибридный X, растянутый X, квадрат, Unibody.</p>
+                <p><b>Рама типа «Х» или «True-X»</b>: Фюзеляж короткий (квадрат), электроника в центре, лучи по углам. Вес распределен равномерно, коптер маневренный. Минус — ограниченное место в центре (сборка «бутербродом»).</p>
+                <p><b>Удлиненный «Х»</b>: Рама «Х» с удлиненной базой. Больше места для компонентов. Двигатели разнесены дальше, что снижает турбулентность и стабилизирует полет.</p>
+                <div class="image-gallery">
+                    <div class="image-block">
+                        <img src="img/2.jpg" alt="Рама Х">
+                        <div class="caption">Рама типа «Х»</div>
+                    </div>
+                    <div class="image-block">
+                        <img src="img/3.jpg" alt="Удлиненный Х">
+                        <div class="caption">Удлиненный «Х»</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 4 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Форма рамы: Тип «H» и Гибридный «X»</h1>
+                <p><b>Рама типа «H»</b>: Центральная часть длиннее, крепление лучей спереди и сзади (похожа на букву «Н»). Проще сборка и ремонт. Минус — неравномерное распределение момента инерции (наклоны вперед/назад тратят больше энергии).</p>
+                <p><b>Гибридная рама «Х»</b>: Фюзеляж от рамы «Н», а лучи соединены как в раме «Х». Попытка объединить преимущества обеих конструкций.</p>
+                <div class="image-gallery">
+                    <div class="image-block">
+                        <img src="img/4.jpg" alt="Рама H">
+                        <div class="caption">Рама типа «H»</div>
+                    </div>
+                    <div class="image-block">
+                        <img src="img/5.jpg" alt="Гибрид">
+                        <div class="caption">Гибридная рама «Hybrid-X»</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 5 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Форма рамы: «Квадрат» и Unibody</h1>
+                <p><b>Рама «Квадрат»</b>: Рама «Х» с соединяющими ребрами между лучами. Очень жесткая и прочная. Минусы: повышенное воздушное сопротивление и вес. Подходит для обучения.</p>
+                <p><b>Unibody рамы</b>: Цельная конструкция с лучами. Упрощает сборку, уменьшает вес. Минус — неремонтопригодность (при поломке луча меняется вся рама).</p>
+                <div class="image-gallery">
+                    <div class="image-block">
+                        <img src="img/6.jpg" alt="Квадрат">
+                        <div class="caption">Рама «Квадрат»</div>
+                    </div>
+                    <div class="image-block">
+                        <img src="img/7.jpg" alt="Unibody">
+                        <div class="caption">Unibody рама</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 6 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Классы рам</h1>
+                <p>В среде любителей и гонщиков принята классификация по классам в зависимости от диагонали. Например, «250 рама» означает диагональ 250 мм (25 см).</p>
+                <p>Диагональ измеряется между центрами моторов (без учета пропеллеров).</p>
+                <p>При разработке рамы нужно учитывать, что размеры влияют на:</p>
+                <ul>
+                    <li>Момент инерции (чем дальше моторы, тем больше инерция);</li>
+                    <li>Общий вес устройства;</li>
+                    <li>Максимальный размер винтов;</li>
+                    <li>Сопротивление воздуху.</li>
+                </ul>
+                <p>Чем меньше рама — тем маневреннее коптер. Чем больше рама — тем больше вес и сопротивление, но выше стабильность.</p>
+            </div>
+        </div>
+
+        <!-- Слайд 7 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Материал рамы: Карбон</h1>
+                <p>Фаворит среди рам для самостоятельной сборки — карбон (углепластик).</p>
+                <ul>
+                    <li><b>Преимущества:</b> максимальная легкость и прочность, долговечность, высокая жесткость (меньше вибраций).</li>
+                    <li><b>Недостатки:</b> электропроводность (нужна изоляция) и непрозрачность для радиосигналов (антенны выводят наружу).</li>
+                </ul>
+                <div class="image-gallery single">
+                    <div class="image-block">
+                        <img src="img/8.jpg" alt="Карбоновая рама">
+                        <div class="caption">Серийная рама из карбона Tarot Iron Man 650</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 8 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Другие материалы</h1>
+                <p><b>Фанера</b>: Часто применяется в самодельных прототипах. Доступность лазерной резки, низкая стоимость и скорость изготовления делают её идеальной для тестирования.</p>
+                <p><b>Литой пластик</b>: Лучший материал для корпуса серийного устройства. Позволяет сделать герметичный корпус (защита от дождя/снега) с ребрами жесткости.</p>
+                <div class="image-gallery">
+                    <div class="image-block">
+                        <img src="img/9.jpg" alt="Фанера">
+                    </div>
+                    <div class="image-block">
+                        <img src="img/10.jpg" alt="Пластик">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 9 -->
+        <div class="slide">
+            <div class="content">
+                <h1>3D-печать рам</h1>
+                <p>Для маленьких квадрокоптеров (cinewhoop) рамы могут быть напечатаны на 3D-принтере. Это позволяет создать монолитную конструкцию с ребрами жесткости.</p>
+                <p>Однако для крупных конструкций с выдающимися лучами 3D-печать не подойдет из-за гибкости пластика.</p>
+                <div class="image-gallery single">
+                    <div class="image-block">
+                        <img src="img/11.jpg" alt="3D печать">
+                        <div class="caption">Рамы, напечатанные на 3D принтере</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 10 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Защитные конструкции: Дуговая защита</h1>
+                <p>Защита нужна для предотвращения поломок лопастей и моторов при падении. Материалы: стекловолокно или пластик.</p>
+                <p><b>Дуговая защита</b> — самый простой и легкий вариант. Крепится на лучах под моторами. Защищает винты за счет упругости.</p>
+                <p><i>Недостаток:</i> коптер может врезаться корпусом в препятствие между лучами, плохо защищает моторы сверху.</p>
+                <div class="image-gallery single">
+                    <div class="image-block">
+                        <img src="img/12.jpg" alt="Дуговая защита">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 11 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Защитные конструкции: Корпусная защита</h1>
+                <p><b>Корпусная защита</b> крепится по всему корпусу, защищая не только моторы, но и раму. Эффективна при прямых столкновениях со стенами. Популярна среди учебных квадрокоптеров.</p>
+                <div class="image-gallery single">
+                    <div class="image-block">
+                        <img src="img/13.jpg" alt="Корпусная защита">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 12 -->
+        <div class="slide">
+            <div class="content">
+                <h1>Сферическая защита и «Клетка»</h1>
+                <p><b>Сферическая защита</b>: предотвращает столкновения по всем осям. Минус — сильное сопротивление воздуху. Эффективна только на маленьких коптерах.</p>
+                <p><b>«Клетка»</b>: надевается на моторы, защищая от попадания объектов. Минус — мешает воздушному потоку, ухудшая полетные характеристики.</p>
+                <div class="image-gallery">
+                    <div class="image-block">
+                        <img src="img/14.jpg" alt="Сферическая защита">
+                    </div>
+                    <div class="image-block">
+                        <img src="img/15.jpg" alt="Клетка">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Слайд 13: ТЕСТ -->
+        <div class="slide">
+            <div class="content">
+                <h1>Проверка знаний</h1>
+                <div class="quiz-container">
+                    
+                    <!-- Вопрос 1 -->
+                    <div class="question-block" data-question="1">
+                        <div class="question-text">1. Из каких двух основных частей состоит рама?</div>
+                        <div class="options">
+                            <label class="option-label"><input type="radio" name="q1" value="A"> А) фюзеляж (корпус) и лучи</label>
+                            <label class="option-label"><input type="radio" name="q1" value="B"> Б) верхняя и нижняя пластины</label>
+                            <label class="option-label"><input type="radio" name="q1" value="C"> В) лучи и моторы</label>
+                            <label class="option-label"><input type="radio" name="q1" value="D"> Г) корпус и посадочные шасси</label>
+                        </div>
+                    </div>
+
+                    <!-- Вопрос 2 -->
+                    <div class="question-block" data-question="2">
+                        <div class="question-text">2. Самый популярный материал для изготовления рамы?</div>
+                        <div class="options">
+                            <label class="option-label"><input type="radio" name="q2" value="A"> А) карбон (углепластик)</label>
+                            <label class="option-label"><input type="radio" name="q2" value="B"> Б) алюминий</label>
+                            <label class="option-label"><input type="radio" name="q2" value="C"> В) стекловолокно</label>
+                            <label class="option-label"><input type="radio" name="q2" value="D"> Г) фанера</label>
+                        </div>
+                    </div>
+
+                    <!-- Вопрос 3 -->
+                    <div class="question-block" data-question="3">
+                        <div class="question-text">3. Как определяется размер рамы?</div>
+                        <div class="options">
+                            <label class="option-label"><input type="radio" name="q3" value="A"> А) по диагонали между центрами моторов, без учёта пропеллеров</label>
+                            <label class="option-label"><input type="radio" name="q3" value="B"> Б) по длине самого длинного луча</label>
+                            <label class="option-label"><input type="radio" name="q3" value="C"> В) по расстоянию между внешними краями рамы</label>
+                            <label class="option-label"><input type="radio" name="q3" value="D"> Г) по максимальному диаметру устанавливаемых пропеллеров</label>
+                        </div>
+                    </div>
+
+                    <!-- Вопрос 4 -->
+                    <div class="question-block" data-question="4">
+                        <div class="question-text">4. На что влияют размеры рамы?</div>
+                        <div class="options">
+                            <label class="option-label"><input type="radio" name="q4" value="A"> А) на момент инерции, общий вес, максимальный размер винтов и сопротивление воздуху</label>
+                            <label class="option-label"><input type="radio" name="q4" value="B"> Б) только на максимальный размер винтов</label>
+                            <label class="option-label"><input type="radio" name="q4" value="C"> В) только на массу и положение центра тяжести</label>
+                            <label class="option-label"><input type="radio" name="q4" value="D"> Г) на мощность моторов и ёмкость аккумулятора</label>
+                        </div>
+                    </div>
+
+                    <!-- Вопрос 5 -->
+                    <div class="question-block" data-question="5">
+                        <div class="question-text">5. Какая рама изображена на картинке (Картинка 3)?</div>
+                        <div class="options">
+                            <label class="option-label"><input type="radio" name="q5" value="A"> А) рама типа «X» / True-X</label>
+                            <label class="option-label"><input type="radio" name="q5" value="B"> Б) рама типа «H»</label>
+                            <label class="option-label"><input type="radio" name="q5" value="C"> В) рама типа «Квадрат»</label>
+                            <label class="option-label"><input type="radio" name="q5" value="D"> Г) гибридная рама «X»</label>
+                        </div>
+                    </div>
+
+                    <button id="checkQuizBtn" class="quiz-btn">Проверить результаты</button>
+                    <div id="quiz-result"></div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn">&#8592; Назад</button>
+            <span id="slideCounter">1 / 13</span>
+            <button class="nav-btn" id="nextBtn">Вперед &#8594;</button>
+        </div>
+
+    </div>
+
+    <!-- --- ВСТРОЕННЫЙ JAVASCRIPT --- -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ЛОГИКА ПРЕЗЕНТАЦИИ ---
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const slideCounter = document.getElementById('slideCounter');
+            let currentSlide = 0;
+
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[index].classList.add('active');
+                slideCounter.textContent = `${index + 1} / ${slides.length}`;
+                
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === slides.length - 1;
+                prevBtn.style.opacity = index === 0 ? '0.5' : '1';
+                nextBtn.style.opacity = index === slides.length - 1 ? '0.5' : '1';
+                
+                // Скролл вверх при переключении
+                slides[index].scrollTop = 0;
+            }
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' && currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                } else if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+
+            showSlide(currentSlide);
+
+            // --- ЛОГИКА ТЕСТА ---
+            const checkBtn = document.getElementById('checkQuizBtn');
+            const resultDiv = document.getElementById('quiz-result');
+            
+            // Правильные ответы (1-А, 2-А, 3-А, 4-А, 5-А)
+            const correctAnswers = {
+                q1: 'A',
+                q2: 'A',
+                q3: 'A',
+                q4: 'A',
+                q5: 'A'
+            };
+
+            checkBtn.addEventListener('click', () => {
+                let score = 0;
+                let allAnswered = true;
+                const totalQuestions = 5;
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                    if (!selected) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    alert("Пожалуйста, ответьте на все вопросы перед проверкой!");
+                    return;
+                }
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const questionBlock = document.querySelector(`.question-block[data-question="${i}"]`);
+                    const labels = questionBlock.querySelectorAll('.option-label');
+                    const selectedValue = document.querySelector(`input[name="q${i}"]:checked`).value;
+                    const correctValue = correctAnswers[`q${i}`];
+
+                    const inputs = questionBlock.querySelectorAll('input[type="radio"]');
+                    inputs.forEach(input => input.disabled = true);
+
+                    labels.forEach(label => {
+                        const input = label.querySelector('input');
+                        if (input.value === correctValue) {
+                            label.classList.add('correct-answer');
+                        }
+                        if (input.value === selectedValue && selectedValue !== correctValue) {
+                            label.classList.add('wrong-answer');
+                        }
+                    });
+
+                    if (selectedValue === correctValue) {
+                        score++;
+                    }
+                }
+
+                resultDiv.style.display = 'block';
+                let message = `Ваш результат: ${score} из ${totalQuestions}. `;
+                if (score === totalQuestions) {
+                    message += "Отлично! Вы отлично усвоили материал.";
+                    resultDiv.style.color = "#28a745";
+                } else if (score >= 3) {
+                    message += "Хорошо! Но стоит повторить некоторые разделы.";
+                    resultDiv.style.color = "#ffc107";
+                } else {
+                    message += "Стоит пересмотреть презентацию еще раз.";
+                    resultDiv.style.color = "#dc3545";
+                }
+                resultDiv.textContent = message;
+                
+                checkBtn.textContent = "Результаты проверены";
+                checkBtn.disabled = true;
+                checkBtn.style.backgroundColor = "#6c757d";
+            });
+        });
+    </script>
+</body>
+</html>
